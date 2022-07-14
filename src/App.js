@@ -1,24 +1,52 @@
-import logo from './logo.svg';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
+import Posts from './Posts';
 import './App.css';
+import Pagination from './Pagination';
+import { paginationhelper } from './paginationHelper';
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+  const [posts, setPosts] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [currentpage = 1, setCurrentpage] = useState(1);
+  const [postsPerPage, setPostsPerPage] = useState(5)
+  const [totalPosts, setTotalPosts] = useState(null)
+  const indexOfLastPost = currentpage * postsPerPage;
+  const indexOfFirstPost = indexOfLastPost - postsPerPage + 1;
+  ;
+  useEffect(() => {
+    getPosts();
+  }, [currentpage])
+
+  const getPosts = async () => {
+    setLoading(true)
+    let response = await axios.get(`http://localhost:5000?start=${indexOfFirstPost}&end=${indexOfLastPost}`)
+    response && setLoading(false)
+    setPosts(response.data.filteredUsers)
+    setTotalPosts(response.data.length)
+  }
+
+  const paginate = (number) => {
+    console.log("currpage", number);
+    setCurrentpage(number)
+  }
+
+  // const currentPosts = posts.slice(indexOfFirstPost, indexOfLastPost);
+  var totalPages = Math.ceil((totalPosts) / postsPerPage);
+  const { startPage, EndPage } = paginationhelper(totalPages, currentpage)
+
+  return (<>
+    <div className="container">
+      <Posts posts={posts} loading={loading} />
     </div>
+    <Pagination
+      postsPerPage={postsPerPage}
+      currentpage={currentpage}
+      totalPosts={totalPosts}
+      startPage={startPage}
+      EndPage={EndPage}
+      paginate={paginate} />
+  </>
   );
 }
 
